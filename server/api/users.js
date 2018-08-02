@@ -1,17 +1,21 @@
-const router = require('express').Router()
-const {User} = require('../db/models')
-module.exports = router
+const router = require('express').Router();
+const {find, get, create, patch} = require('./userHelper');
+const config = require('./config');
+const jwt = require('express-jwt');
+module.exports = router;
 
-router.get('/', async (req, res, next) => {
-  try {
-    const users = await User.findAll({
-      // explicitly select only the id and email fields - even though
-      // users' passwords are encrypted, it won't help if we just
-      // send everything to anyone who asks!
-      attributes: ['id', 'email']
-    })
-    res.json(users)
-  } catch (err) {
-    next(err)
-  }
-})
+/** GET /api/users */
+router.route('/').get(find);
+
+/** GET /api/users/:userId */
+/** Authenticated route */
+router.get('/:userId', jwt({ secret: config.secret }), get);
+
+/** POST /api/users */
+router.post('/', create);
+
+/** PATCH /api/users/:userId */
+/** Authenticated route */
+router.patch('/:userId', jwt({ secret: config.secret }), patch);
+
+module.exports = router;

@@ -1,5 +1,6 @@
 body {
   font-family: sans-serif;
+  background: linear-gradient(to bottom, #cdeb8b 0%,#cdeb8b 100%);
 }
 
 a {
@@ -18,4 +19,28 @@ nav a {
 form div {
   margin: 1em;
   display: inline-block;
+}
+
+.App {
+  margin: 3% 3% 3% 3%;
+}
+
+.blockies {
+  font-size: 2em;
+
+}
+
+.profile {
+  display: flex;
+  flex-flow: wrap column;
+  font-size: 1.5em;
+  background: linear-gradient(to bottom, #cdeb8b 0%,#cdeb8b 100%);
+}
+
+.change-username {
+  margin: 3% 0% 3% 0%;
+}
+
+.login-prompt {
+  font-size: 1.5em;
 }
