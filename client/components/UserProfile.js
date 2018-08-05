@@ -3,15 +3,20 @@ import Blockies from 'react-blockies';
 import jwtDecode from 'jwt-decode';
 import {Button, Input, Label} from 'semantic-ui-react';
 import axios from 'axios';
+import { eth, getInstance } from '../web3/provider';
+import MyERC721 from "../web3/artifacts/MyERC721.json";
 
-class Profile extends Component {
+class UserProfile extends Component {
 
   constructor() {
     super();
     this.state = {
       loading: false,
       user: null,
-      username: ''
+      username: '',
+      token: null,
+      tokens: [],
+      totalQuantity: 0,
     };
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -34,7 +39,45 @@ class Profile extends Component {
     } catch (err) {
       window.alert(err);
     }
+
+    this.setupContract();
   }
+
+  async setupContract() {
+    try {
+      const raveToken = await getInstance(MyERC721);
+      this.setState({
+        token: raveToken,
+      });
+      console.log("raveToken", await raveToken.name());
+      console.log("symbol", await raveToken.symbol());
+
+      // this.retrieveTokens();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // async retrieveTokens() {
+  //   const {token, user: {publicAddress}} = this.state;
+  //   const allTokensOfOwner = await token.tokensOfOwner(publicAddress);
+
+  //   const allTokens = await Promise.all(allTokensOfOwner.map(async raveToken => {
+  //     const values = await token.getRave(raveToken);
+  //     return {
+  //       tokenId: raveToken.toNumber(),
+  //       values
+  //     }
+  //   }));
+
+  //   this.setState({
+  //     tokens: allTokens,
+  //   });
+
+  //   this.retrieveTokens();
+
+  //   console.log(this.state);
+  // }
 
   handleChange({ target: { value } }) {
     console.log(value);
@@ -68,7 +111,7 @@ class Profile extends Component {
   render() {
     const { auth: { accessToken }, onLoggedOut } = this.props;
     const { payload: { publicAddress } } = jwtDecode(accessToken);
-    const { loading, user, username } = this.state;
+    const { loading, user, username, tokens} = this.state;
 
     const myUsername = user && user.username;
 
@@ -89,12 +132,10 @@ class Profile extends Component {
             Submit
           </Button>
         </div>
-        <p>
-          <Button className='logout-button' color='red' onClick={onLoggedOut}>Don't u dare Logout</Button>
-        </p>
+        <Button className='logout-button' color='red' onClick={onLoggedOut}>Don't u fuckin' dare Logout</Button>
       </div>
     );
   }
 }
 
-export default Profile;
+export default UserProfile;

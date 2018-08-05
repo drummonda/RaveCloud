@@ -25,7 +25,7 @@ class Login extends Component {
   }
 
   async handleClick() {
-    const { onLoggedIn } = this.props;
+    const { onLoggedIn, userType, setUser } = this.props;
 
     if (!window.web3) {
       window.alert('Please install MetaMask first.');
@@ -58,7 +58,10 @@ class Login extends Component {
       const auth = await this.handleAuthenticate(signed);
 
 
+      setUser(userType);
+      localStorage.setItem('user', userType);
       onLoggedIn(auth);
+
     } catch (err) {
       console.error(err);
       this.setState({ loading: false });
@@ -85,17 +88,18 @@ class Login extends Component {
 
   render() {
     const { loading } = this.state;
-    console.log(this.props)
+    const { userType } = this.props;
     return (
-      <div>
-        <p className="login-prompt">
-          Let's get this party started!
-          <br/>
-          Install MetaMask if you haven't already, and you can use it to create and account and/or login
-        </p>
-        <Button primary className="Login-button Login-mm" onClick={this.handleClick}>
-          {loading ? 'Loading...' : 'Login with MetaMask'}
-        </Button>
+      <div className="login">
+        {userType === "User" ?
+          <Button primary className="Login-button Login-mm" onClick={this.handleClick}>
+            {loading ? 'Loading...' : 'Login as a User with MetaMask'}
+          </Button>
+          :
+          <Button secondary className="Login-button Login-mm" onClick={this.handleClick}>
+            {loading ? 'Loading...' : 'Login as a Venue with MetaMask'}
+          </Button>
+        }
       </div>
     );
   }

@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 
 import Login from './Login';
-import Profile from './Profile';
+import VenueProfile from './VenueProfile';
+import UserProfile from './UserProfile';
 
 const LS_KEY = 'mm-login-demo:auth';
 
@@ -11,13 +12,17 @@ class Main extends Component {
     super(props);
     this.handleLoggedIn = this.handleLoggedIn.bind(this);
     this.handleLoggedOut = this.handleLoggedOut.bind(this);
+    this.handleSetUser = this.handleSetUser.bind(this);
   }
 
   componentWillMount() {
     // Access token is stored in localstorage
     const auth = JSON.parse(localStorage.getItem(LS_KEY));
+    const userType = localStorage.getItem('user');
+
     this.setState({
-      auth
+      auth,
+      userType
     });
   }
 
@@ -33,18 +38,45 @@ class Main extends Component {
     this.setState({ auth: undefined });
   }
 
+  handleSetUser(userType) {
+    this.setState({
+      userType,
+    });
+  }
+
   render() {
-    const { auth } = this.state;
+    const { auth, userType } = this.state;
     return (
       <div className="App">
         <header className="App-header">
-          <h1 className="App-title">Welcome to the mothafuckin' Rage Cloud</h1>
+          <h1 className="App-title">Welcome to the mothafuckin' ~Rave Cloud~</h1>
         </header>
         <div className="App-intro">
           {auth ? (
-            <Profile auth={auth} onLoggedOut={this.handleLoggedOut} />
+            userType === "User" ?
+              <UserProfile auth={auth} onLoggedOut={this.handleLoggedOut} />
+              :
+              <VenueProfile auth={auth} onLoggedOut={this.handleLoggedOut} />
           ) : (
-            <Login onLoggedIn={this.handleLoggedIn} />
+            <div>
+              <p className="login-prompt">
+              Let's get this party started!
+              <br/>
+              Install MetaMask if you haven't already, and you can use it to create and account and/or login
+              </p>
+              <Login
+                onLoggedIn={this.handleLoggedIn}
+                setUser={this.handleSetUser}
+                userType="Venue"
+              />
+
+              <Login
+                onLoggedIn={this.handleLoggedIn}
+                setUser={this.handleSetUser}
+                userType="User"
+              />
+            </div>
+
           )}
         </div>
       </div>
