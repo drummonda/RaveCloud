@@ -12,10 +12,12 @@ const provider = () => {
 
 export const eth = new Web3(provider()).eth
 
-export const getInstance = artifact => {
+export const getInstance = async artifact => {
   const contractObj = contract(artifact)
-  contractObj.setProvider(provider())
+  contractObj.setProvider(provider());
 
-  return contractObj.deployed();
+  const deployed = await contractObj.deployed();
+  console.log(deployed);
+  return deployed;
 }
 

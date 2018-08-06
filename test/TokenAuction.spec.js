@@ -113,8 +113,6 @@ contract("Testing Auction", async accounts => {
     it("Should transfer token back to seller", async () => {
         assert.equal(await nft.ownerOf(token), accounts[0]);
     });
-
-
   })
 
 });

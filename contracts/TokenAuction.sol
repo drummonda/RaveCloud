@@ -42,7 +42,7 @@ contract TokenAuction is TokenAuctionBase {
         uint256 _duration,
         address _seller
     )
-        external
+      public
     {
         // Sanity check that no inputs overflow how many bits we've allocated
         // to store them in the auction struct.
@@ -90,7 +90,7 @@ contract TokenAuction is TokenAuctionBase {
     /// @dev Returns auction info for an NFT on auction.
     /// @param _tokenId - ID of NFT on auction.
     function getAuction(uint256 _tokenId)
-        external
+        public
         view
         returns
     (

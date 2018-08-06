@@ -8,7 +8,7 @@ import MintTokens from './MintTokens';
 import AllVenueTokens from './AllVenueTokens';
 
 import MyERC721 from "../web3/artifacts/MyERC721.json";
-import TokenAuction from "../web3/artifacts/TokenAuction.json"
+import TokenAuction from "../web3/artifacts/TokenAuction.json";
 
 class VenueProfile extends Component {
 
@@ -22,9 +22,12 @@ class VenueProfile extends Component {
       tokens: [],
       totalQuantity: 0,
     };
+
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.mintTokens = this.mintTokens.bind(this);
+    this.createAuction = this.createAuction.bind(this);
+    this.cancelAuction = this.cancelAuction.bind(this);
   }
 
   async componentWillMount() {
@@ -44,7 +47,6 @@ class VenueProfile extends Component {
     } catch (err) {
       window.alert(err);
     }
-
     this.setupContract();
   }
 
@@ -52,10 +54,9 @@ class VenueProfile extends Component {
     try {
       const raveToken = await getInstance(MyERC721);
       const auctionContract = await getInstance(TokenAuction);
-      const auctionInstance = await auctionContract.new(raveToken.address)
       this.setState({
         token: raveToken,
-        auctionInstance
+        auctionContract
       });
       this.retrieveTokens();
     } catch (err) {
@@ -64,14 +65,14 @@ class VenueProfile extends Component {
   }
 
   async retrieveTokens() {
-    const {token, user: {publicAddress}} = this.state;
+    const { token, user: {publicAddress} } = this.state;
     const allTokensOfOwner = await token.tokensOfOwner(publicAddress);
 
     const allTokens = await Promise.all(allTokensOfOwner.map(async raveToken => {
       const values = await token.getRave(raveToken);
       return {
         tokenId: raveToken.toNumber(),
-        values
+        values,
       }
     }));
 
@@ -80,6 +81,12 @@ class VenueProfile extends Component {
     });
 
     console.log(this.state);
+  }
+
+  async retrieveAuction(token) {
+    const { auctionContract } = this.state;
+    const tokenAuction = await auctionContract.getAuction(token);
+    return tokenAuction;
   }
 
   async mintTokens({venue, artist, date , quantity}) {
@@ -99,19 +106,43 @@ class VenueProfile extends Component {
     }
   }
 
-  async createAuction(token, itemPrice) {
-    const { auctionInstance, raveToken } = this.state;
-    const owner = await raveToken.owner();
-    const auction = await auctionInstance.createAuction(token, itemPrice, 100000, {from: owner});
-    console.log(auction);
+  async createAuction(tokenId, itemPrice) {
+    try {
+      const { tokens, token, auctionContract, user: {publicAddress} } = this.state;
 
-    this.setState({
-      activeAuction: true,
-    })
+      const owner = await token.ownerOf(tokenId)
+
+      await token.approve(auctionContract.address, tokenId, {from: owner});
+
+      const auction = await auctionContract.createAuction(tokenId, Number(itemPrice), 100000, owner, {from: owner});
+
+      const tokenToUpdate = tokens.find(token => token.id === tokenId);
+      const updatedToken = Object.assign({}, tokenToUpdate, { auction });
+
+      const updatedTokens = tokens.map(token => {
+        if(token.id === tokenId) {
+          return updatedToken;
+        } else {
+          return token;
+        }
+      })
+
+      this.setState({
+        tokens: updatedTokens
+      })
+
+      console.log(auction);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
-  async deleteAuction(token) {
-
+  async cancelAuction(token) {
+    const {auctionContract} = this.state;
+    await auctionContract.cancelAuction(token);
+    this.setState({
+      activeAuction: false,
+    })
   }
 
   handleChange({ target: { value } }) {
@@ -171,7 +202,12 @@ class VenueProfile extends Component {
         {tokens.length ?
           <div className="all-tokens-container">
             <h3>All the tickets I'm selling</h3>
-            <AllVenueTokens tokens={tokens} />
+            <AllVenueTokens
+              tokens={tokens}
+              createAuction={this.createAuction}
+              cancelAuction={this.cancelAuction}
+            />
+
           </div>
           :
           <div>

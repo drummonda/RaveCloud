@@ -3,7 +3,7 @@ const db = require('../db')
 
 const User = db.define('user', {
   nonce: {
-    type: Sequelize.INTEGER.UNSIGNED,
+    type: Sequelize.INTEGER,
     allowNull: false,
     defaultValue: () => Math.floor(Math.random() * 10000)
   },

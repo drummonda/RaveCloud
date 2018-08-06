@@ -6,5 +6,6 @@ const symbol = "RAVE"
 module.exports = async function(deployer) {
   await deployer.deploy(MyERC721, name, symbol);
   const instance = await MyERC721.deployed();
-  await deployer.deploy(TokenAuction, instance.address);
+  const auctionInstance = await deployer.deploy(TokenAuction, instance.address);
+  return auctionInstance;
 };
