@@ -7,7 +7,7 @@ const AllVenueTokens = ({tokens, createAuction, cancelAuction}) => {
     <List divided relaxed className='token-list'>
       {tokens.map(token => (
         <SingleToken
-          key={token.tokenId}
+          key={Number(token.tokenId)}
           token={token}
           createAuction={createAuction}
           cancelAuction={cancelAuction}

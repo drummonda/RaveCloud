@@ -17,5 +17,3 @@ router.post('/', create);
 /** PATCH /api/users/:userId */
 /** Authenticated route */
 router.patch('/:userId', jwt({ secret: config.secret }), patch);
-
-module.exports = router;

@@ -65,19 +65,30 @@ class VenueProfile extends Component {
   }
 
   async retrieveTokens() {
-    const { token, user: {publicAddress} } = this.state;
+    const { token, user: {publicAddress}, auctionContract } = this.state;
     const allTokensOfOwner = await token.tokensOfOwner(publicAddress);
+    const allTokensOfAuction = await token.tokensOfOwner(auctionContract.address);
 
-    const allTokens = await Promise.all(allTokensOfOwner.map(async raveToken => {
+    const allOwnedTokens = await Promise.all(allTokensOfOwner.map(async raveToken => {
       const values = await token.getRave(raveToken);
       return {
-        tokenId: raveToken.toNumber(),
+        tokenId: raveToken,
         values,
       }
     }));
 
+    const allAuctionedTokens = await Promise.all(allTokensOfAuction.map(async raveToken => {
+      const values = await token.getRave(raveToken);
+      const auction = await this.retrieveAuction(raveToken);
+      return {
+        tokenId: raveToken,
+        values,
+        auction,
+      }
+    }));
+
     this.setState({
-      tokens: allTokens,
+      tokens: [...allOwnedTokens, ...allAuctionedTokens]
     });
 
     console.log(this.state);
@@ -110,17 +121,18 @@ class VenueProfile extends Component {
     try {
       const { tokens, token, auctionContract, user: {publicAddress} } = this.state;
 
-      const owner = await token.ownerOf(tokenId)
+      let owner = await token.ownerOf(tokenId);
 
       await token.approve(auctionContract.address, tokenId, {from: owner});
 
-      const auction = await auctionContract.createAuction(tokenId, Number(itemPrice), 100000, owner, {from: owner});
+      const auction = await auctionContract.createAuction(tokenId, Number(itemPrice), 1000, owner, {from: owner});
 
-      const tokenToUpdate = tokens.find(token => token.id === tokenId);
+      const tokenToUpdate = tokens.find(raveToken => raveToken.id === Number(tokenId));
       const updatedToken = Object.assign({}, tokenToUpdate, { auction });
+      console.log(updatedToken)
 
-      const updatedTokens = tokens.map(token => {
-        if(token.id === tokenId) {
+      const updatedTokens = tokens.map(raveToken => {
+        if(raveToken.id === Number(tokenId)){
           return updatedToken;
         } else {
           return token;
@@ -139,7 +151,7 @@ class VenueProfile extends Component {
 
   async cancelAuction(token) {
     const {auctionContract} = this.state;
-    await auctionContract.cancelAuction(token);
+    await auctionContract.cancelAuction(token, {from: auctionContract.address});
     this.setState({
       activeAuction: false,
     })
@@ -212,13 +224,13 @@ class VenueProfile extends Component {
           :
           <div>
             <h3>Sorry, you don't have any tickets for sale</h3>
-            <h4>How about you get fucking started...</h4>
+            <h4>How about you get freakin' started...</h4>
           </div>
         }
 
         <MintTokens mintTokens={this.mintTokens}/>
         <p>
-          <Button className='logout-button' color='red' onClick={onLoggedOut}>Don't u fuckin' dare Logout</Button>
+          <Button className='logout-button' color='red' onClick={onLoggedOut}>Don't u dare Logout</Button>
         </p>
       </div>
     );

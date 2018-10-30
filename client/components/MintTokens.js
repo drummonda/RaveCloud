@@ -63,7 +63,7 @@ export default class MintTokens extends Component {
         />
 
         <Button primary onClick={this.handleClick}>
-          Let's fucking RAVE
+          Let's RAVE
         </Button>
       </div>
     )

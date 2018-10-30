@@ -22,7 +22,7 @@ const get = async (req, res, next) => {
     const user = await User.findById(req.params.userId)
     res.json(user);
   } catch (err) {
-    next(user);
+    next(err);
   }
 };
 

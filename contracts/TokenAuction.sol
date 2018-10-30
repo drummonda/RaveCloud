@@ -64,7 +64,7 @@ contract TokenAuction is TokenAuctionBase {
     ///  ownership of the NFT if enough Ether is supplied.
     /// @param _tokenId - ID of token to bid on.
     function bid(uint256 _tokenId)
-        external
+        public
         payable
     {
         // _bid will throw if the bid or funds transfer fails

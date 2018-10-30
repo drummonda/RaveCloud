@@ -3,9 +3,10 @@ const TokenAuction = artifacts.require("TokenAuction");
 const name = "Rave Token";
 const symbol = "RAVE"
 
-module.exports = async function(deployer) {
-  await deployer.deploy(MyERC721, name, symbol);
-  const instance = await MyERC721.deployed();
-  const auctionInstance = await deployer.deploy(TokenAuction, instance.address);
-  return auctionInstance;
-};
+module.exports = function(deployer) {
+    deployer.deploy(MyERC721, name, symbol).then(function(){
+      return MyERC721.deployed();
+    }).then(function(instance){
+      return deployer.deploy(TokenAuction, instance.address)
+    });
+}

@@ -5,6 +5,9 @@ import {Button, Input, Label} from 'semantic-ui-react';
 import axios from 'axios';
 import { eth, getInstance } from '../web3/provider';
 import MyERC721 from "../web3/artifacts/MyERC721.json";
+import TokenAuction from "../web3/artifacts/TokenAuction.json";
+import AllAuctionTokens from './AllAuctionTokens';
+import AllVenueTokens from './AllVenueTokens';
 
 class UserProfile extends Component {
 
@@ -20,9 +23,10 @@ class UserProfile extends Component {
     };
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleChange = this.handleChange.bind(this);
+    this.bidOnAuction = this.bidOnAuction.bind(this);
   }
 
-  async componentWillMount() {
+  async componentDidMount() {
     const { auth: { accessToken } } = this.props;
     const { payload: { id } } = await jwtDecode(accessToken);
     try {
@@ -46,41 +50,62 @@ class UserProfile extends Component {
   async setupContract() {
     try {
       const raveToken = await getInstance(MyERC721);
+      const auctionContract = await getInstance(TokenAuction);
       this.setState({
         token: raveToken,
+        auctionContract
       });
-      console.log("raveToken", await raveToken.name());
-      console.log("symbol", await raveToken.symbol());
-
-      // this.retrieveTokens();
+      this.retrieveTokens();
     } catch (err) {
       console.error(err);
     }
   }
 
-  // async retrieveTokens() {
-  //   const {token, user: {publicAddress}} = this.state;
-  //   const allTokensOfOwner = await token.tokensOfOwner(publicAddress);
+  async retrieveTokens() {
+    const { token, user: {publicAddress}, auctionContract } = this.state;
+    const allTokensOfOwner = await token.tokensOfOwner(publicAddress);
+    const allTokensOfAuction = await token.tokensOfOwner(auctionContract.address);
 
-  //   const allTokens = await Promise.all(allTokensOfOwner.map(async raveToken => {
-  //     const values = await token.getRave(raveToken);
-  //     return {
-  //       tokenId: raveToken.toNumber(),
-  //       values
-  //     }
-  //   }));
+    const allOwnedTokens = await Promise.all(allTokensOfOwner.map(async raveToken => {
+      const values = await token.getRave(raveToken);
+      return {
+        tokenId: raveToken,
+        values,
+      }
+    }));
 
-  //   this.setState({
-  //     tokens: allTokens,
-  //   });
+    const allAuctionedTokens = await Promise.all(allTokensOfAuction.map(async raveToken => {
+      const values = await token.getRave(raveToken);
+      const auction = await this.retrieveAuction(raveToken);
+      return {
+        tokenId: raveToken,
+        values,
+        auction,
+      }
+    }));
 
-  //   this.retrieveTokens();
+    const myTokens = allOwnedTokens.length || null;
+    const auctionTokens = allAuctionedTokens.length || null;
 
-  //   console.log(this.state);
-  // }
+    this.setState({
+      myTokens: allOwnedTokens,
+      auctionTokens: allAuctionedTokens,
+    });
+
+  }
+
+  async retrieveAuction(token) {
+    const { auctionContract } = this.state;
+    const tokenAuction = await auctionContract.getAuction(token);
+    return tokenAuction;
+  }
+
+  async bidOnAuction(tokenId) {
+    const { auctionContract, user: {publicAddress} } = this.state;
+    await auctionContract.bid(tokenId, {from: publicAddress, value: 10});
+  }
 
   handleChange({ target: { value } }) {
-    console.log(value);
     this.setState({ username: value });
   };
 
@@ -111,7 +136,7 @@ class UserProfile extends Component {
   render() {
     const { auth: { accessToken }, onLoggedOut } = this.props;
     const { payload: { publicAddress } } = jwtDecode(accessToken);
-    const { loading, user, username, tokens} = this.state;
+    const { loading, user, username, auctionTokens, myTokens } = this.state;
 
     const myUsername = user && user.username;
 
@@ -132,7 +157,30 @@ class UserProfile extends Component {
             Submit
           </Button>
         </div>
-        <Button className='logout-button' color='red' onClick={onLoggedOut}>Don't u fuckin' dare Logout</Button>
+        {auctionTokens ?
+          <div>
+            <h3>All tokens up for auction</h3>
+            <AllAuctionTokens
+              auctionTokens={auctionTokens}
+              bidOnAuction={this.bidOnAuction}
+            />
+          </div>
+          :
+          <h3>No tokens up for auction!</h3>
+        }
+
+        {myTokens ?
+          <div>
+            <h3>All muhh tokens</h3>
+            <AllVenueTokens
+              tokens={myTokens}
+            />
+          </div>
+          :
+          <h3>I really wish I had some tokens...</h3>
+        }
+
+        <Button className='logout-button' color='red' onClick={onLoggedOut}>Don't u dare Logout</Button>
       </div>
     );
   }

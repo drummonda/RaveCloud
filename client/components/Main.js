@@ -49,7 +49,7 @@ class Main extends Component {
     return (
       <div className="App">
         <header className="App-header">
-          <h1 className="App-title">Welcome to the mothafuckin' ~Rave Cloud~</h1>
+          <h1 className="App-title">Welcome to the ~Rave Cloud~</h1>
         </header>
         <div className="App-intro">
           {auth ? (
